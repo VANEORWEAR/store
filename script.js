@@ -1,6 +1,21 @@
 /* ==========================================
-   VANEOR WEAR - High Converting Store Script
+   VANEOR WEAR - Firebase Cloud Firestore Script
    ========================================== */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCvotaZZi8V-mGjvH2NaReB6t_ys4QJQws",
+  authDomain: "vaneor-wear.firebaseapp.com",
+  projectId: "vaneor-wear",
+  storageBucket: "vaneor-wear.firebasestorage.app",
+  messagingSenderId: "38239565603",
+  appId: "1:38239565603:web:4a2e2d028dfca1b3d6be96"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const currencies = {
     USD: { symbol: '$', rate: 1, name: 'US Dollar' },
@@ -41,7 +56,6 @@ const translations = {
     }
 };
 
-// المنتجات الافتراضية المحدثة لتظهر لجميع الزوار مباشرة
 const defaultProducts = [
     {
         id: 1,
@@ -102,9 +116,9 @@ const defaultSettings = {
 
 let currentLang = localStorage.getItem('vaneor_lang') || 'en';
 let currentCurr = localStorage.getItem('vaneor_curr') || 'USD';
-let products = JSON.parse(localStorage.getItem('vaneor_products')) || defaultProducts;
-let siteContent = JSON.parse(localStorage.getItem('vaneor_content')) || defaultContent;
-let siteSettings = JSON.parse(localStorage.getItem('vaneor_settings')) || defaultSettings;
+let products = [];
+let siteContent = defaultContent;
+let siteSettings = defaultSettings;
 let cart = JSON.parse(localStorage.getItem('vaneor_cart')) || [];
 let selectedSizeState = null;
 let currentQuantityState = 1;
@@ -138,16 +152,46 @@ const checkoutTotalPrice = document.getElementById('checkout-total-price');
 const mobileMenuBtn = document.getElementById('mobile-menu-btn');
 const mobileMenu = document.getElementById('mobile-menu');
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initRadioStates();
     applyLanguage(currentLang);
     applyCurrency(currentCurr);
+    
+    await loadDataFromCloud();
+
     applySiteContent();
     renderProducts('all');
     updateCartUI();
     setupEventListeners();
     createCustomAlertModal();
 });
+
+async function loadDataFromCloud() {
+    try {
+        const prodSnap = await getDocs(collection(db, "products"));
+        if (!prodSnap.empty) {
+            products = prodSnap.docs.map(docSnap => ({ firestoreId: docSnap.id, ...docSnap.data() }));
+        } else {
+            for (let p of defaultProducts) {
+                await setDoc(doc(db, "products", String(p.id)), p);
+            }
+            products = defaultProducts;
+        }
+
+        const settingsSnap = await getDocs(collection(db, "settings"));
+        if (!settingsSnap.empty) {
+            siteSettings = settingsSnap.docs[0].data();
+        }
+
+        const contentSnap = await getDocs(collection(db, "content"));
+        if (!contentSnap.empty) {
+            siteContent = contentSnap.docs[0].data();
+        }
+    } catch (error) {
+        console.error("Cloud loading error, fallback to local:", error);
+        products = JSON.parse(localStorage.getItem('vaneor_products')) || defaultProducts;
+    }
+}
 
 function initRadioStates() {
     const langRadio = document.querySelector(`input[name="lang-option"][value="${currentLang}"]`);
@@ -618,9 +662,8 @@ async function dispatchOrder(channel = 'gmail') {
 
     text += `\n💰 *المجموع الكلي:* ${formatPrice(total)}`;
 
-    const activeSettings = JSON.parse(localStorage.getItem('vaneor_settings')) || defaultSettings;
-    const targetEmail = activeSettings.email || "vaneor.wear@gmail.com";
-    const targetWhatsapp = activeSettings.whatsapp || "201037664877";
+    const targetEmail = siteSettings.email || "vaneor.wear@gmail.com";
+    const targetWhatsapp = siteSettings.whatsapp || "201037664877";
 
     if (channel === 'whatsapp') {
         const waText = encodeURIComponent(text);
