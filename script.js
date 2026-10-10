@@ -91,7 +91,7 @@ const defaultContent = {
     brand: "VANEOR WEAR",
     subtitle: "Autumn / Winter Legacy",
     title: "Timeless Elegance. Winter Legacy.",
-    heroBg: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=1920",
+    heroBg: "https://i.pinimg.com/736x/5d/62/13/5d62135a72920729abb6eb7f92fbeaf3.jpg",
     desc: "Immaculate heavy wool coats, structured turtlenecks, and refined tailored trousers."
 };
 
