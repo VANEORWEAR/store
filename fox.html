@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VANEOR WEAR | Administration Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vaneor: { navy: '#111827', charcoal: '#1F2937', forest: '#1E3A2F', camel: '#C5A880', cream: '#F4F1EA', sand: '#E6E1D6', dark: '#0B1017' }
+                    },
+                    fontFamily: { serif: ['Playfair Display', 'Cairo', 'serif'], sans: ['Inter', 'Cairo', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-vaneor-dark text-vaneor-cream antialiased">
+
+    <!-- Admin Header -->
+    <header class="bg-vaneor-navy border-b border-gray-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl font-serif font-bold tracking-[0.2em] text-vaneor-cream">VANEOR</span>
+                <span class="bg-vaneor-camel text-vaneor-dark text-[10px] uppercase font-bold px-2 py-0.5 rounded tracking-widest">Fox Control</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="index.html" target="_blank" class="px-4 py-2 border border-vaneor-camel/40 text-vaneor-camel hover:bg-vaneor-camel hover:text-vaneor-dark text-xs uppercase tracking-widest font-bold transition duration-300 flex items-center gap-2">
+                    <i class="fa-solid fa-eye"></i> View Storefront
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="flex border-b border-gray-800 mb-8 space-x-8">
+            <button id="tab-products-btn" onclick="switchTab('products')" class="pb-4 text-sm uppercase tracking-widest font-bold text-vaneor-camel border-b-2 border-vaneor-camel transition">
+                <i class="fa-solid fa-box mr-2"></i> Products & Inventory
+            </button>
+            <button id="tab-settings-btn" onclick="switchTab('settings')" class="pb-4 text-sm uppercase tracking-widest font-semibold text-gray-400 hover:text-vaneor-cream transition">
+                <i class="fa-solid fa-gear mr-2"></i> Dispatch Settings
+            </button>
+            <button id="tab-content-btn" onclick="switchTab('content')" class="pb-4 text-sm uppercase tracking-widest font-semibold text-gray-400 hover:text-vaneor-cream transition">
+                <i class="fa-solid fa-pen-to-square mr-2"></i> Store Content
+            </button>
+        </div>
+
+        <!-- TAB 1: PRODUCTS MANAGEMENT -->
+        <div id="tab-products" class="space-y-10">
+            <div class="glass-card p-6 sm:p-8 rounded-sm shadow-xl">
+                <h2 id="form-title" class="font-serif text-2xl font-bold text-vaneor-cream mb-6">Add New Winter Piece</h2>
+                <form id="product-form" class="space-y-6">
+                    <input type="hidden" id="product-id">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Product Name</label>
+                            <input type="text" id="p-name" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel" placeholder="e.g. The Kensington Wool Coat">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">السعر الحالي (EGP)</label>
+                            <input type="number" id="p-price" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel" placeholder="27000">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">السعر القديم قبل الخصم (اختياري)</label>
+                            <input type="number" id="p-old-price" class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel" placeholder="32000">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Category</label>
+                            <select id="p-category" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel">
+                                <option value="Outerwear">Outerwear & Coats</option>
+                                <option value="Knitwear">Knitwear & Turtlenecks</option>
+                                <option value="Trousers">Tailored Trousers</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Colorway</label>
+                            <input type="text" id="p-color" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel" placeholder="Dark Navy / Camel">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Image Input Type</label>
+                            <select id="image-type-selector" class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel">
+                                <option value="url">Direct Image URLs (Comma separated)</option>
+                                <option value="file">Upload Images from Computer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="url-input-group">
+                        <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Image URLs (First image is cover, separated by comma)</label>
+                        <textarea id="p-image-urls" rows="2" class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel" placeholder="https://image1.jpg, https://image2.jpg"></textarea>
+                    </div>
+
+                    <div id="file-input-group" class="hidden">
+                        <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Select Multiple Image Files</label>
+                        <input type="file" id="p-image-files" accept="image/*" multiple class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-2 text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-vaneor-camel file:text-vaneor-dark hover:file:bg-white cursor-pointer">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Description</label>
+                        <textarea id="p-desc" rows="3" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel" placeholder="Crafted from heavy virgin wool blend..."></textarea>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <button type="submit" id="save-btn" class="px-8 py-3.5 bg-vaneor-camel text-vaneor-dark font-bold uppercase tracking-widest text-xs hover:bg-white transition duration-300 shadow-xl">
+                            Save Product
+                        </button>
+                        <button type="button" id="cancel-btn" onclick="resetForm()" class="hidden px-6 py-3.5 border border-gray-700 text-gray-400 hover:text-vaneor-cream text-xs uppercase tracking-widest font-bold transition">
+                            Cancel Edit
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="glass-card p-6 sm:p-8 rounded-sm shadow-xl">
+                <h3 class="font-serif text-xl font-bold text-vaneor-cream mb-6">Catalog Inventory & Gallery Preview</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-xs uppercase tracking-wider text-vaneor-camel font-bold">
+                                <th class="py-3 px-4">Gallery Images</th>
+                                <th class="py-3 px-4">Name</th>
+                                <th class="py-3 px-4">Category</th>
+                                <th class="py-3 px-4">Price (EGP)</th>
+                                <th class="py-3 px-4 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-product-list" class="divide-y divide-gray-800/60 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: DISPATCH SETTINGS -->
+        <div id="tab-settings" class="space-y-10 hidden">
+            <div class="glass-card p-6 sm:p-8 rounded-sm shadow-xl">
+                <h2 class="font-serif text-2xl font-bold text-vaneor-cream mb-6">Order Dispatch Channels</h2>
+                <form id="settings-form" class="space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Receiver Email Address (Gmail)</label>
+                            <input type="email" id="s-email" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel" placeholder="vaneor.wear@gmail.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">WhatsApp Receiving Phone Number</label>
+                            <input type="text" id="s-whatsapp" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel" placeholder="201037664877">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <button type="submit" class="px-8 py-3.5 bg-vaneor-camel text-vaneor-dark font-bold uppercase tracking-widest text-xs hover:bg-white transition duration-300 shadow-xl">
+                            Save Channels
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 3: STORE CONTENT MANAGEMENT -->
+        <div id="tab-content" class="space-y-10 hidden">
+            <div class="glass-card p-6 sm:p-8 rounded-sm shadow-xl">
+                <h2 class="font-serif text-2xl font-bold text-vaneor-cream mb-6">Modify Store Banner & Texts</h2>
+                <form id="content-form" class="space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Brand Title</label>
+                            <input type="text" id="c-brand" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Hero Subtitle</label>
+                            <input type="text" id="c-subtitle" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Hero Title</label>
+                        <input type="text" id="c-title" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Hero Background Image URL</label>
+                        <input type="url" id="c-hero-bg" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-vaneor-camel mb-2 font-bold">Hero Description</label>
+                        <textarea id="c-desc" rows="3" required class="w-full bg-vaneor-dark border border-gray-700 rounded-sm px-4 py-3 text-sm text-vaneor-cream focus:outline-none focus:border-vaneor-camel"></textarea>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button type="submit" class="px-8 py-3.5 bg-vaneor-camel text-vaneor-dark font-bold uppercase tracking-widest text-xs hover:bg-white transition duration-300 shadow-xl">
+                            Update Storefront
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+    <script>
+        const defaultProducts = [
+            {
+                id: 1,
+                name: "The Kensington Double-Breasted Wool Coat",
+                category: "Outerwear",
+                price: 27000 / 50,
+                oldPrice: 32000 / 50,
+                color: "Dark Navy",
+                images: [
+                    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800",
+                    "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=800"
+                ],
+                description: "Crafted from heavy virgin wool blend with peak lapels.",
+                sizes: ["S", "M", "L", "XL", "XXL"]
+            }
+        ];
+
+        const defaultContent = {
+            brand: "VANEOR WEAR",
+            subtitle: "Autumn / Winter Legacy",
+            title: "Timeless Elegance. Winter Legacy.",
+            heroBg: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=1920",
+            desc: "Immaculate heavy wool coats, structured turtlenecks, and refined tailored trousers."
+        };
+
+        const defaultSettings = {
+            email: "vaneor.wear@gmail.com",
+            whatsapp: "201037664877"
+        };
+
+        let products = JSON.parse(localStorage.getItem('vaneor_products')) || defaultProducts;
+        let siteContent = JSON.parse(localStorage.getItem('vaneor_content')) || defaultContent;
+        let siteSettings = JSON.parse(localStorage.getItem('vaneor_settings')) || defaultSettings;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAdminTable();
+            populateContentForm();
+            populateSettingsForm();
+            
+            document.getElementById('image-type-selector').addEventListener('change', (e) => {
+                if(e.target.value === 'url') {
+                    document.getElementById('url-input-group').classList.remove('hidden');
+                    document.getElementById('file-input-group').classList.add('hidden');
+                } else {
+                    document.getElementById('url-input-group').classList.add('hidden');
+                    document.getElementById('file-input-group').classList.remove('hidden');
+                }
+            });
+        });
+
+        function switchTab(tab) {
+            document.getElementById('tab-products').classList.add('hidden');
+            document.getElementById('tab-settings').classList.add('hidden');
+            document.getElementById('tab-content').classList.add('hidden');
+
+            document.getElementById('tab-products-btn').className = "pb-4 text-sm uppercase tracking-widest font-semibold text-gray-400 hover:text-vaneor-cream transition";
+            document.getElementById('tab-settings-btn').className = "pb-4 text-sm uppercase tracking-widest font-semibold text-gray-400 hover:text-vaneor-cream transition";
+            document.getElementById('tab-content-btn').className = "pb-4 text-sm uppercase tracking-widest font-semibold text-gray-400 hover:text-vaneor-cream transition";
+
+            if(tab === 'products') {
+                document.getElementById('tab-products').classList.remove('hidden');
+                document.getElementById('tab-products-btn').className = "pb-4 text-sm uppercase tracking-widest font-bold text-vaneor-camel border-b-2 border-vaneor-camel transition";
+            } else if(tab === 'settings') {
+                document.getElementById('tab-settings').classList.remove('hidden');
+                document.getElementById('tab-settings-btn').className = "pb-4 text-sm uppercase tracking-widest font-bold text-vaneor-camel border-b-2 border-vaneor-camel transition";
+            } else {
+                document.getElementById('tab-content').classList.remove('hidden');
+                document.getElementById('tab-content-btn').className = "pb-4 text-sm uppercase tracking-widest font-bold text-vaneor-camel border-b-2 border-vaneor-camel transition";
+            }
+        }
+
+        function populateSettingsForm() {
+            document.getElementById('s-email').value = siteSettings.email || "vaneor.wear@gmail.com";
+            document.getElementById('s-whatsapp').value = siteSettings.whatsapp || "201037664877";
+        }
+
+        document.getElementById('settings-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            siteSettings = {
+                email: document.getElementById('s-email').value.trim(),
+                whatsapp: document.getElementById('s-whatsapp').value.trim()
+            };
+            localStorage.setItem('vaneor_settings', JSON.stringify(siteSettings));
+            showToast('Dispatch channels updated successfully.');
+        });
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-product-list');
+            tbody.innerHTML = '';
+            
+            if(products.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-gray-500">No products found in inventory.</td></tr>`;
+                return;
+            }
+
+            products.forEach(p => {
+                const imgList = (p.images && p.images.length > 0) ? p.images : [p.image || 'https://placehold.co/100x120'];
+                const priceEgpFormatted = Math.round(p.price * 50).toLocaleString();
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/30 transition";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 flex gap-1.5 overflow-x-auto max-w-xs">
+                        ${imgList.map(img => `<img src="${img}" class="w-10 h-12 object-cover rounded-sm border border-gray-700" onerror="this.src='https://placehold.co/100x120/111827/F4F1EA?text=V'">`).join('')}
+                    </td>
+                    <td class="py-3 px-4 font-bold text-vaneor-cream">${p.name}</td>
+                    <td class="py-3 px-4 text-gray-400">${p.category}</td>
+                    <td class="py-3 px-4 text-vaneor-camel font-bold">EGP ${priceEgpFormatted}</td>
+                    <td class="py-3 px-4 text-center space-x-3">
+                        <button onclick="editProduct(${p.id})" class="text-blue-400 hover:text-blue-300 transition font-bold" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteProduct(${p.id})" class="text-red-400 hover:text-red-300 transition font-bold" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('product-id').value;
+            const name = document.getElementById('p-name').value;
+            const priceInputEgp = parseFloat(document.getElementById('p-price').value);
+            const oldPriceInputEgp = document.getElementById('p-old-price').value;
+            
+            const basePriceUsd = priceInputEgp / 50;
+            const baseOldPriceUsd = oldPriceInputEgp ? parseFloat(oldPriceInputEgp) / 50 : null;
+
+            const category = document.getElementById('p-category').value;
+            const color = document.getElementById('p-color').value;
+            const desc = document.getElementById('p-desc').value;
+
+            let imagesArray = [];
+            const imgType = document.getElementById('image-type-selector').value;
+
+            if(imgType === 'url') {
+                const rawUrls = document.getElementById('p-image-urls').value;
+                if(rawUrls.trim() !== '') {
+                    imagesArray = rawUrls.split(',').map(url => url.trim()).filter(url => url !== '');
+                }
+            } else {
+                const fileInput = document.getElementById('p-image-files');
+                if(fileInput.files && fileInput.files.length > 0) {
+                    for(let i = 0; i < fileInput.files.length; i++) {
+                        const base64 = await convertFileToBase64(fileInput.files[i]);
+                        imagesArray.push(base64);
+                    }
+                }
+            }
+
+            if(id) {
+                const index = products.findIndex(p => p.id == id);
+                if(index !== -1) {
+                    const finalImages = imagesArray.length > 0 ? imagesArray : (products[index].images || [products[index].image]);
+                    products[index] = { ...products[index], name, price: basePriceUsd, oldPrice: baseOldPriceUsd, category, color, description: desc, images: finalImages, image: finalImages[0] };
+                }
+                showToast('Product updated successfully.');
+            } else {
+                if(imagesArray.length === 0) {
+                    showToast('Please provide at least one image URL or upload files.');
+                    return;
+                }
+                const newProd = { id: Date.now(), name, category, price: basePriceUsd, oldPrice: baseOldPriceUsd, color, description: desc, images: imagesArray, image: imagesArray[0], sizes: ["S", "M", "L", "XL"] };
+                products.push(newProd);
+                showToast('New product added to catalog.');
+            }
+
+            localStorage.setItem('vaneor_products', JSON.stringify(products));
+            renderAdminTable();
+            resetForm();
+        });
+
+        function editProduct(id) {
+            const p = products.find(prod => prod.id == id);
+            if(!p) return;
+            document.getElementById('product-id').value = p.id;
+            document.getElementById('p-name').value = p.name;
+            document.getElementById('p-price').value = Math.round(p.price * 50);
+            document.getElementById('p-old-price').value = p.oldPrice ? Math.round(p.oldPrice * 50) : '';
+            document.getElementById('p-category').value = p.category;
+            document.getElementById('p-color').value = p.color || '';
+            document.getElementById('p-desc').value = p.description;
+            const imgs = p.images || [p.image];
+            document.getElementById('p-image-urls').value = imgs.join(', ');
+            document.getElementById('form-title').innerText = "Edit Winter Piece & Gallery";
+            document.getElementById('save-btn').innerText = "Update Product";
+            document.getElementById('cancel-btn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteProduct(id) {
+            if(confirm("Are you sure you want to remove this piece from the catalog?")) {
+                products = products.filter(p => p.id != id);
+                localStorage.setItem('vaneor_products', JSON.stringify(products));
+                renderAdminTable();
+                showToast('Product removed successfully.');
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('product-form').reset();
+            document.getElementById('product-id').value = '';
+            document.getElementById('form-title').innerText = "Add New Winter Piece";
+            document.getElementById('save-btn').innerText = "Save Product";
+            document.getElementById('cancel-btn').classList.add('hidden');
+        }
+
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function populateContentForm() {
+            document.getElementById('c-brand').value = siteContent.brand;
+            document.getElementById('c-subtitle').value = siteContent.subtitle;
+            document.getElementById('c-title').value = siteContent.title;
+            document.getElementById('c-hero-bg').value = siteContent.heroBg;
+            document.getElementById('c-desc').value = siteContent.desc;
+        }
+
+        document.getElementById('content-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            siteContent = {
+                brand: document.getElementById('c-brand').value,
+                subtitle: document.getElementById('c-subtitle').value,
+                title: document.getElementById('c-title').value,
+                heroBg: document.getElementById('c-hero-bg').value,
+                desc: document.getElementById('c-desc').value
+            };
+            localStorage.setItem('vaneor_content', JSON.stringify(siteContent));
+            showToast('Storefront content updated successfully.');
+        });
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = "bg-vaneor-navy border-l-4 border-vaneor-camel text-vaneor-cream px-6 py-4 shadow-2xl text-xs uppercase tracking-wider font-bold flex items-center justify-between animate-fade-in pointer-events-auto";
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
