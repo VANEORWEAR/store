@@ -41,6 +41,7 @@ const translations = {
     }
 };
 
+// المنتجات الافتراضية المحدثة لتظهر لجميع الزوار مباشرة
 const defaultProducts = [
     {
         id: 1,
@@ -55,6 +56,34 @@ const defaultProducts = [
         ],
         description: "Crafted from heavy virgin wool blend with peak lapels.",
         sizes: ["S", "M", "L", "XL", "XXL"]
+    },
+    {
+        id: 2,
+        name: "Milano Cashmere Turtleneck",
+        category: "Knitwear",
+        price: 8500 / 50,
+        oldPrice: 10500 / 50,
+        color: "Rich Camel",
+        images: [
+            "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&q=80&w=800",
+            "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&q=80&w=800"
+        ],
+        description: "Luxurious pure cashmere knit designed for uncompromising warmth and sleek silhouette.",
+        sizes: ["S", "M", "L", "XL"]
+    },
+    {
+        id: 3,
+        name: "Savile Row Tailored Wool Trousers",
+        category: "Trousers",
+        price: 9500 / 50,
+        oldPrice: 12000 / 50,
+        color: "Charcoal Gray",
+        images: [
+            "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=800",
+            "https://images.unsplash.com/photo-1533867617858-e7d97e0afd8b?auto=format&fit=crop&q=80&w=800"
+        ],
+        description: "Immaculate pleated wool trousers with classic high-waist old money drape.",
+        sizes: ["30", "32", "34", "36", "38"]
     }
 ];
 
@@ -325,7 +354,7 @@ function openQuickView(productId) {
     if(!p) return;
     const t = translations[currentLang] || translations.en;
     const availableSizes = p.sizes || ["S", "M", "L", "XL"];
-    selectedSizeState = availableSizes[0]; // Auto select first size to avoid user error
+    selectedSizeState = availableSizes[0]; 
     currentQuantityState = 1;
 
     const images = (p.images && p.images.length > 0) ? p.images : [p.image || 'https://placehold.co/800x1000'];
