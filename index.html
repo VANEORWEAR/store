@@ -27,15 +27,6 @@
 </head>
 <body class="bg-vaneor-dark text-vaneor-cream antialiased selection:bg-vaneor-camel selection:text-vaneor-dark">
 
-    <!-- Global Loading Overlay to Prevent Content Flash -->
-    <div id="store-loader" class="fixed inset-0 z-50 bg-vaneor-dark flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="text-vaneor-camel text-4xl mb-4 animate-bounce"><i class="fa-solid fa-chess-knight"></i></div>
-        <h2 class="font-serif text-xl tracking-[0.3em] text-vaneor-cream uppercase mb-2">VANEOR WEAR</h2>
-        <div class="w-32 h-0.5 bg-gray-800 relative overflow-hidden">
-            <div class="absolute inset-0 bg-vaneor-camel animate-[pulse_1s_infinite]"></div>
-        </div>
-    </div>
-
     <!-- Trust & Inspection Banner -->
     <div class="bg-vaneor-camel text-vaneor-dark text-[11px] sm:text-xs font-bold py-2 px-4 text-center tracking-wider uppercase border-b border-vaneor-camel/30">
         <i class="fa-solid fa-shield-halved mr-1"></i> <span data-i18n="trust-banner">معاينة جميع القطع قبل الاستلام والتجميع | استبدال واسترجاع سلس خلال 14 يوماً</span>
@@ -191,7 +182,7 @@
             <button data-filter="Trousers" data-i18n="filter-trousers" class="filter-btn whitespace-nowrap px-5 py-2.5 text-xs uppercase tracking-widest font-medium transition duration-300 bg-vaneor-navy/80 text-gray-300 hover:bg-vaneor-camel hover:text-vaneor-dark border border-gray-800 rounded-sm">Tailored Trousers</button>
         </div>
 
-        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8 opacity-0 transition-opacity duration-500"></div>
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8"></div>
     </section>
 
     <!-- Manifesto -->
@@ -414,7 +405,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Currencies with live exchange rates fallback
         const currencies = {
             USD: { symbol: '$', rate: 1, name: 'US Dollar' },
             EGP: { symbol: 'EGP ', rate: 50, name: 'Egyptian Pound' },
@@ -456,7 +446,22 @@
 
         let currentLang = localStorage.getItem('vaneor_lang') || 'en';
         let currentCurr = localStorage.getItem('vaneor_curr') || 'USD';
-        let products = [];
+        
+        // المنتجات الأساسية كـ Fallback لتظهر فوراً على الشاشة بدون أي تأخير
+        let products = [
+            {
+                id: 1,
+                name: "VANEOR Signature Wool Shirt",
+                category: "Knitwear",
+                price: 550,
+                oldPrice: 650,
+                color: "Striped Elegance",
+                description: "Crafted from heavy virgin wool blend designed for absolute comfort and timeless style.",
+                images: ["https://i.ibb.co/Y7qP8vH5/1.jpg", "https://i.ibb.co/v4VxKShm/2.jpg"],
+                sizes: ["S", "M", "L", "XL"]
+            }
+        ];
+
         let siteContent = {};
         let siteSettings = {};
         let cart = JSON.parse(localStorage.getItem('vaneor_cart')) || [];
@@ -466,7 +471,6 @@
 
         const kachingAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
 
-        // Fetch live market exchange rates automatically
         async function fetchLiveExchangeRates() {
             try {
                 const response = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -483,18 +487,29 @@
         }
 
         async function initStore() {
+            // عرض المنتجات الأساسية فوراً من أول ثانية
+            applyLanguage(currentLang);
+            applyCurrency(currentCurr);
+            initRadioStates();
+            setupEventListeners();
+            createCustomAlertModal();
+            renderProducts('all');
+            updateCartUI();
+
             try {
-                // Fetch live exchange rates in background
                 await fetchLiveExchangeRates();
 
-                // Fetch Products from Cloud Firestore
                 const querySnapshot = await getDocs(collection(db, "products"));
-                products = [];
+                const fetchedProducts = [];
                 querySnapshot.forEach((docSnap) => {
-                    products.push(docSnap.data());
+                    fetchedProducts.push(docSnap.data());
                 });
 
-                // Fetch Settings
+                if (fetchedProducts.length > 0) {
+                    products = fetchedProducts;
+                    renderProducts('all');
+                }
+
                 const settingsDoc = await getDoc(doc(db, "settings", "store_settings"));
                 if(settingsDoc.exists()) {
                     siteSettings = settingsDoc.data();
@@ -502,43 +517,13 @@
                     siteSettings = { whatsapp: "201037664877", email: "vaneor.wear@gmail.com" };
                 }
 
-                // Fetch Content
                 const contentDoc = await getDoc(doc(db, "content", "store_content"));
                 if(contentDoc.exists()) {
                     siteContent = contentDoc.data();
-                } else {
-                    siteContent = {
-                        brand: "VANEOR WEAR",
-                        subtitle: "Autumn / Winter Legacy",
-                        title: "Timeless Elegance. Winter Legacy.",
-                        heroBg: "https://i.pinimg.com/736x/5d/62/13/5d62135a72920729abb6eb7f92fbeaf3.jpg",
-                        desc: "Immaculate heavy wool coats..."
-                    };
+                    applySiteContent();
                 }
-
-                // Update UI elements dynamically from cloud
-                applySiteContent();
-                initRadioStates();
-                applyLanguage(currentLang);
-                applyCurrency(currentCurr);
-                renderProducts('all');
-                updateCartUI();
-                setupEventListeners();
-                createCustomAlertModal();
-
-                // Smoothly hide loader and reveal product grid
-                const loader = document.getElementById('store-loader');
-                if(loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.remove(), 500);
-                }
-                document.getElementById('product-grid').classList.remove('opacity-0');
-
             } catch (err) {
-                console.error("Error initializing cloud store:", err);
-                const loader = document.getElementById('store-loader');
-                if(loader) loader.remove();
-                document.getElementById('product-grid').classList.remove('opacity-0');
+                console.warn("Cloud sync background note:", err);
             }
         }
 
@@ -1060,7 +1045,7 @@
         }
 
         function showCustomAlertModal(channel, hasVodafone) {
-            const alertModal = document.getElementById('custom-alert-modal');
+            The alertModal = document.getElementById('custom-alert-modal');
             const alertText = document.getElementById('custom-alert-text');
 
             let channelName = channel === 'whatsapp' ? 'WhatsApp' : 'Gmail';
@@ -1103,7 +1088,7 @@
             }, 3000);
         }
 
-        // Run initialization on page load
+        // تشغيل المتجر فوراً
         initStore();
     </script>
 </body>
