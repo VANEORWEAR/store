@@ -371,8 +371,8 @@
             const priceInputEgp = parseFloat(document.getElementById('p-price').value);
             const oldPriceInputEgp = document.getElementById('p-old-price').value;
             
-            const basePriceUsd = priceInputEgp / 50;
-            const baseOldPriceUsd = oldPriceInputEgp ? parseFloat(oldPriceInputEgp) / 50 : null;
+           const basePriceUsd = priceInputEgp;
+const baseOldPriceUsd = oldPriceInputEgp ? parseFloat(oldPriceInputEgp) : null;
 
             const category = document.getElementById('p-category').value;
             const color = document.getElementById('p-color').value;
