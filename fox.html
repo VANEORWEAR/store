@@ -345,7 +345,7 @@
 
             products.forEach(p => {
                 const imgList = (p.images && p.images.length > 0) ? p.images : [p.image || 'https://placehold.co/100x120'];
-                const priceEgpFormatted = Math.round(p.price * 50).toLocaleString();
+               const priceEgpFormatted = Number(p.price || 0).toLocaleString();
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-800/30 transition";
                 tr.innerHTML = `
@@ -425,8 +425,8 @@ const baseOldPriceUsd = oldPriceInputEgp ? parseFloat(oldPriceInputEgp) : null;
             if(!p) return;
             document.getElementById('product-id').value = p.id;
             document.getElementById('p-name').value = p.name;
-            document.getElementById('p-price').value = Math.round(p.price * 50);
-            document.getElementById('p-old-price').value = p.oldPrice ? Math.round(p.oldPrice * 50) : '';
+            document.getElementById('p-price').value = p.price || '';
+document.getElementById('p-old-price').value = p.oldPrice || '';
             document.getElementById('p-category').value = p.category;
             document.getElementById('p-color').value = p.color || '';
             document.getElementById('p-desc').value = p.description;
