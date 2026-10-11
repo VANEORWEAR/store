@@ -30,7 +30,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <span class="text-2xl font-serif font-bold tracking-[0.2em] text-vaneor-cream">VANEOR</span>
-                <span class="bg-vaneor-camel text-vaneor-dark text-[10px] uppercase font-bold px-2 py-0.5 rounded tracking-widest">Fox Control</span>
+                <span class="bg-vaneor-camel text-vaneor-dark text-[10px] uppercase font-bold px-2 py-0.5 rounded tracking-widest">Fox Control (Cloud)</span>
             </div>
             <div class="flex items-center space-x-4">
                 <a href="index.html" target="_blank" class="px-4 py-2 border border-vaneor-camel/40 text-vaneor-camel hover:bg-vaneor-camel hover:text-vaneor-dark text-xs uppercase tracking-widest font-bold transition duration-300 flex items-center gap-2">
@@ -207,58 +207,28 @@
 
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 pointer-events-none"></div>
 
-    <script>
-        const defaultProducts = [
-            {
-                id: 1,
-                name: "The Kensington Double-Breasted Wool Coat",
-                category: "Outerwear",
-                price: 27000 / 50,
-                oldPrice: 32000 / 50,
-                color: "Dark Navy",
-                images: [
-                    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800",
-                    "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=800"
-                ],
-                description: "Crafted from heavy virgin wool blend with peak lapels.",
-                sizes: ["S", "M", "L", "XL", "XXL"]
-            }
-        ];
+    <!-- Firebase SDK & Admin Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, getDoc, setDoc, doc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        const defaultContent = {
-            brand: "VANEOR WEAR",
-            subtitle: "Autumn / Winter Legacy",
-            title: "Timeless Elegance. Winter Legacy.",
-            heroBg: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=1920",
-            desc: "Immaculate heavy wool coats, structured turtlenecks, and refined tailored trousers."
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbU4p7LYnhFE1Pdbgw1_2EjeDHHv4ca-8",
+            authDomain: "vaneor-wear-b37cb.firebaseapp.com",
+            projectId: "vaneor-wear-b37cb",
+            storageBucket: "vaneor-wear-b37cb.appspot.com",
+            messagingSenderId: "241436806989",
+            appId: "1:241436806989:web:88460822fd2882e1edf104"
         };
 
-        const defaultSettings = {
-            email: "vaneor.wear@gmail.com",
-            whatsapp: "201037664877"
-        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        let products = JSON.parse(localStorage.getItem('vaneor_products')) || defaultProducts;
-        let siteContent = JSON.parse(localStorage.getItem('vaneor_content')) || defaultContent;
-        let siteSettings = JSON.parse(localStorage.getItem('vaneor_settings')) || defaultSettings;
+        let products = [];
+        let siteContent = { brand: "VANEOR WEAR", subtitle: "Autumn / Winter Legacy", title: "Timeless Elegance. Winter Legacy.", heroBg: "https://i.pinimg.com/736x/5d/62/13/5d62135a72920729abb6eb7f92fbeaf3.jpg", desc: "Immaculate heavy wool coats..." };
+        let siteSettings = { email: "vaneor.wear@gmail.com", whatsapp: "201037664877" };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderAdminTable();
-            populateContentForm();
-            populateSettingsForm();
-            
-            document.getElementById('image-type-selector').addEventListener('change', (e) => {
-                if(e.target.value === 'url') {
-                    document.getElementById('url-input-group').classList.remove('hidden');
-                    document.getElementById('file-input-group').classList.add('hidden');
-                } else {
-                    document.getElementById('url-input-group').classList.add('hidden');
-                    document.getElementById('file-input-group').classList.remove('hidden');
-                }
-            });
-        });
-
-        function switchTab(tab) {
+        window.switchTab = function(tab) {
             document.getElementById('tab-products').classList.add('hidden');
             document.getElementById('tab-settings').classList.add('hidden');
             document.getElementById('tab-content').classList.add('hidden');
@@ -277,21 +247,91 @@
                 document.getElementById('tab-content').classList.remove('hidden');
                 document.getElementById('tab-content-btn').className = "pb-4 text-sm uppercase tracking-widest font-bold text-vaneor-camel border-b-2 border-vaneor-camel transition";
             }
+        };
+
+        async function loadCloudData() {
+            try {
+                // Load Products
+                const querySnapshot = await getDocs(collection(db, "products"));
+                products = [];
+                querySnapshot.forEach((docSnap) => {
+                    products.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                });
+
+                if(products.length === 0) {
+                    const defaultProducts = [
+                        {
+                            id: 1,
+                            name: "The Kensington Double-Breasted Wool Coat",
+                            category: "Outerwear",
+                            price: 27000 / 50,
+                            oldPrice: 32000 / 50,
+                            color: "Dark Navy",
+                            images: [
+                                "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800",
+                                "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=800"
+                            ],
+                            description: "Crafted from heavy virgin wool blend with peak lapels.",
+                            sizes: ["S", "M", "L", "XL", "XXL"]
+                        }
+                    ];
+                    for(const p of defaultProducts) {
+                        await setDoc(doc(db, "products", String(p.id)), p);
+                        products.push(p);
+                    }
+                }
+
+                // Load Settings
+                const settingsDoc = await getDoc(doc(db, "settings", "store_settings"));
+                if(settingsDoc.exists()) {
+                    siteSettings = settingsDoc.data();
+                } else {
+                    await setDoc(doc(db, "settings", "store_settings"), siteSettings);
+                }
+
+                // Load Content
+                const contentDoc = await getDoc(doc(db, "content", "store_content"));
+                if(contentDoc.exists()) {
+                    siteContent = contentDoc.data();
+                } else {
+                    await setDoc(doc(db, "content", "store_content"), siteContent);
+                }
+
+                renderAdminTable();
+                populateSettingsForm();
+                populateContentForm();
+            } catch (err) {
+                console.error("Error loading cloud data:", err);
+            }
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCloudData();
+            
+            document.getElementById('image-type-selector').addEventListener('change', (e) => {
+                if(e.target.value === 'url') {
+                    document.getElementById('url-input-group').classList.remove('hidden');
+                    document.getElementById('file-input-group').classList.add('hidden');
+                } else {
+                    document.getElementById('url-input-group').classList.add('hidden');
+                    document.getElementById('file-input-group').classList.remove('hidden');
+                }
+            });
+        });
 
         function populateSettingsForm() {
             document.getElementById('s-email').value = siteSettings.email || "vaneor.wear@gmail.com";
             document.getElementById('s-whatsapp').value = siteSettings.whatsapp || "201037664877";
         }
 
-        document.getElementById('settings-form').addEventListener('submit', (e) => {
+        document.getElementById('settings-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             siteSettings = {
                 email: document.getElementById('s-email').value.trim(),
                 whatsapp: document.getElementById('s-whatsapp').value.trim()
             };
-            localStorage.setItem('vaneor_settings', JSON.stringify(siteSettings));
-            showToast('Dispatch channels updated successfully.');
+            await setDoc(doc(db, "settings", "store_settings"), siteSettings);
+            showToast('Dispatch channels updated on Cloud.');
         });
 
         function renderAdminTable() {
@@ -361,24 +401,26 @@
                 if(index !== -1) {
                     const finalImages = imagesArray.length > 0 ? imagesArray : (products[index].images || [products[index].image]);
                     products[index] = { ...products[index], name, price: basePriceUsd, oldPrice: baseOldPriceUsd, category, color, description: desc, images: finalImages, image: finalImages[0] };
+                    await setDoc(doc(db, "products", String(id)), products[index]);
                 }
-                showToast('Product updated successfully.');
+                showToast('Product updated on Cloud.');
             } else {
                 if(imagesArray.length === 0) {
                     showToast('Please provide at least one image URL or upload files.');
                     return;
                 }
-                const newProd = { id: Date.now(), name, category, price: basePriceUsd, oldPrice: baseOldPriceUsd, color, description: desc, images: imagesArray, image: imagesArray[0], sizes: ["S", "M", "L", "XL"] };
+                const newId = Date.now();
+                const newProd = { id: newId, name, category, price: basePriceUsd, oldPrice: baseOldPriceUsd, color, description: desc, images: imagesArray, image: imagesArray[0], sizes: ["S", "M", "L", "XL"] };
                 products.push(newProd);
-                showToast('New product added to catalog.');
+                await setDoc(doc(db, "products", String(newId)), newProd);
+                showToast('New product added to Cloud catalog.');
             }
 
-            localStorage.setItem('vaneor_products', JSON.stringify(products));
             renderAdminTable();
             resetForm();
         });
 
-        function editProduct(id) {
+        window.editProduct = function(id) {
             const p = products.find(prod => prod.id == id);
             if(!p) return;
             document.getElementById('product-id').value = p.id;
@@ -394,24 +436,24 @@
             document.getElementById('save-btn').innerText = "Update Product";
             document.getElementById('cancel-btn').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        };
 
-        function deleteProduct(id) {
-            if(confirm("Are you sure you want to remove this piece from the catalog?")) {
+        window.deleteProduct = async function(id) {
+            if(confirm("Are you sure you want to remove this piece from the cloud catalog?")) {
                 products = products.filter(p => p.id != id);
-                localStorage.setItem('vaneor_products', JSON.stringify(products));
+                await deleteDoc(doc(db, "products", String(id)));
                 renderAdminTable();
-                showToast('Product removed successfully.');
+                showToast('Product removed from Cloud.');
             }
-        }
+        };
 
-        function resetForm() {
+        window.resetForm = function() {
             document.getElementById('product-form').reset();
             document.getElementById('product-id').value = '';
             document.getElementById('form-title').innerText = "Add New Winter Piece";
             document.getElementById('save-btn').innerText = "Save Product";
             document.getElementById('cancel-btn').classList.add('hidden');
-        }
+        };
 
         function convertFileToBase64(file) {
             return new Promise((resolve, reject) => {
@@ -430,7 +472,7 @@
             document.getElementById('c-desc').value = siteContent.desc;
         }
 
-        document.getElementById('content-form').addEventListener('submit', (e) => {
+        document.getElementById('content-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             siteContent = {
                 brand: document.getElementById('c-brand').value,
@@ -439,8 +481,8 @@
                 heroBg: document.getElementById('c-hero-bg').value,
                 desc: document.getElementById('c-desc').value
             };
-            localStorage.setItem('vaneor_content', JSON.stringify(siteContent));
-            showToast('Storefront content updated successfully.');
+            await setDoc(doc(db, "content", "store_content"), siteContent);
+            showToast('Storefront content updated on Cloud.');
         });
 
         function showToast(message) {
