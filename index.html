@@ -27,6 +27,15 @@
 </head>
 <body class="bg-vaneor-dark text-vaneor-cream antialiased selection:bg-vaneor-camel selection:text-vaneor-dark">
 
+    <!-- Global Loading Overlay to Prevent Content Flash -->
+    <div id="store-loader" class="fixed inset-0 z-50 bg-vaneor-dark flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="text-vaneor-camel text-4xl mb-4 animate-bounce"><i class="fa-solid fa-chess-knight"></i></div>
+        <h2 class="font-serif text-xl tracking-[0.3em] text-vaneor-cream uppercase mb-2">VANEOR WEAR</h2>
+        <div class="w-32 h-0.5 bg-gray-800 relative overflow-hidden">
+            <div class="absolute inset-0 bg-vaneor-camel animate-[pulse_1s_infinite]"></div>
+        </div>
+    </div>
+
     <!-- Trust & Inspection Banner -->
     <div class="bg-vaneor-camel text-vaneor-dark text-[11px] sm:text-xs font-bold py-2 px-4 text-center tracking-wider uppercase border-b border-vaneor-camel/30">
         <i class="fa-solid fa-shield-halved mr-1"></i> <span data-i18n="trust-banner">معاينة جميع القطع قبل الاستلام والتجميع | استبدال واسترجاع سلس خلال 14 يوماً</span>
@@ -70,18 +79,6 @@
                                 <label class="flex items-center justify-between cursor-pointer hover:text-vaneor-camel transition py-1">
                                     <div class="flex items-center space-x-3"><span class="fi fi-eg text-sm rounded-sm"></span><span>العربية - AR</span></div>
                                     <input type="radio" name="lang-option" value="ar" onchange="setLanguage('ar')" class="accent-vaneor-camel">
-                                </label>
-                                <label class="flex items-center justify-between cursor-pointer hover:text-vaneor-camel transition py-1">
-                                    <div class="flex items-center space-x-3"><span class="fi fi-de text-sm rounded-sm"></span><span>Deutsch - DE</span></div>
-                                    <input type="radio" name="lang-option" value="de" onchange="setLanguage('de')" class="accent-vaneor-camel">
-                                </label>
-                                <label class="flex items-center justify-between cursor-pointer hover:text-vaneor-camel transition py-1">
-                                    <div class="flex items-center space-x-3"><span class="fi fi-fr text-sm rounded-sm"></span><span>Français - FR</span></div>
-                                    <input type="radio" name="lang-option" value="fr" onchange="setLanguage('fr')" class="accent-vaneor-camel">
-                                </label>
-                                <label class="flex items-center justify-between cursor-pointer hover:text-vaneor-camel transition py-1">
-                                    <div class="flex items-center space-x-3"><span class="fi fi-es text-sm rounded-sm"></span><span>Español - ES</span></div>
-                                    <input type="radio" name="lang-option" value="es" onchange="setLanguage('es')" class="accent-vaneor-camel">
                                 </label>
                             </div>
                         </div>
@@ -194,7 +191,7 @@
             <button data-filter="Trousers" data-i18n="filter-trousers" class="filter-btn whitespace-nowrap px-5 py-2.5 text-xs uppercase tracking-widest font-medium transition duration-300 bg-vaneor-navy/80 text-gray-300 hover:bg-vaneor-camel hover:text-vaneor-dark border border-gray-800 rounded-sm">Tailored Trousers</button>
         </div>
 
-        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8"></div>
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8 opacity-0 transition-opacity duration-500"></div>
     </section>
 
     <!-- Manifesto -->
@@ -417,6 +414,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Currencies with live exchange rates fallback
         const currencies = {
             USD: { symbol: '$', rate: 1, name: 'US Dollar' },
             EGP: { symbol: 'EGP ', rate: 50, name: 'Egyptian Pound' },
@@ -425,7 +423,7 @@
             AED: { symbol: 'AED ', rate: 3.67, name: 'UAE Dirham' }
         };
 
-        const flags = { en: 'fi-gb', ar: 'fi-eg', de: 'fi-de', fr: 'fi-fr', es: 'fi-es' };
+        const flags = { en: 'fi-gb', ar: 'fi-eg' };
 
         const translations = {
             en: {
@@ -468,8 +466,27 @@
 
         const kachingAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
 
+        // Fetch live market exchange rates automatically
+        async function fetchLiveExchangeRates() {
+            try {
+                const response = await fetch('https://open.er-api.com/v6/latest/USD');
+                const data = await response.json();
+                if (data && data.rates) {
+                    if (data.rates.EGP) currencies.EGP.rate = data.rates.EGP;
+                    if (data.rates.EUR) currencies.EUR.rate = data.rates.EUR;
+                    if (data.rates.SAR) currencies.SAR.rate = data.rates.SAR;
+                    if (data.rates.AED) currencies.AED.rate = data.rates.AED;
+                }
+            } catch (e) {
+                console.warn("Using fallback static exchange rates:", e);
+            }
+        }
+
         async function initStore() {
             try {
+                // Fetch live exchange rates in background
+                await fetchLiveExchangeRates();
+
                 // Fetch Products from Cloud Firestore
                 const querySnapshot = await getDocs(collection(db, "products"));
                 products = [];
@@ -508,8 +525,20 @@
                 updateCartUI();
                 setupEventListeners();
                 createCustomAlertModal();
+
+                // Smoothly hide loader and reveal product grid
+                const loader = document.getElementById('store-loader');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 500);
+                }
+                document.getElementById('product-grid').classList.remove('opacity-0');
+
             } catch (err) {
                 console.error("Error initializing cloud store:", err);
+                const loader = document.getElementById('store-loader');
+                if(loader) loader.remove();
+                document.getElementById('product-grid').classList.remove('opacity-0');
             }
         }
 
