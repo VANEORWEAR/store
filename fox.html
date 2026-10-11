@@ -207,37 +207,42 @@
 
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 pointer-events-none"></div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <script>
+        const defaultProducts = [
+            {
+                id: 1,
+                name: "The Kensington Double-Breasted Wool Coat",
+                category: "Outerwear",
+                price: 27000 / 50,
+                oldPrice: 32000 / 50,
+                color: "Dark Navy",
+                images: [
+                    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800",
+                    "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=800"
+                ],
+                description: "Crafted from heavy virgin wool blend with peak lapels.",
+                sizes: ["S", "M", "L", "XL", "XXL"]
+            }
+        ];
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyCvotaZZi8V-mGjvH2NaReB6t_ys4QJQws",
-          authDomain: "vaneor-wear.firebaseapp.com",
-          projectId: "vaneor-wear",
-          storageBucket: "vaneor-wear.firebasestorage.app",
-          messagingSenderId: "38239565603",
-          appId: "1:38239565603:web:4a2e2d028dfca1b3d6be96"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        let products = [];
-        let siteContent = {
+        const defaultContent = {
             brand: "VANEOR WEAR",
             subtitle: "Autumn / Winter Legacy",
             title: "Timeless Elegance. Winter Legacy.",
-            heroBg: "https://i.pinimg.com/736x/5d/62/13/5d62135a72920729abb6eb7f92fbeaf3.jpg",
+            heroBg: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=1920",
             desc: "Immaculate heavy wool coats, structured turtlenecks, and refined tailored trousers."
         };
-        let siteSettings = {
+
+        const defaultSettings = {
             email: "vaneor.wear@gmail.com",
             whatsapp: "201037664877"
         };
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadAdminData();
+        let products = JSON.parse(localStorage.getItem('vaneor_products')) || defaultProducts;
+        let siteContent = JSON.parse(localStorage.getItem('vaneor_content')) || defaultContent;
+        let siteSettings = JSON.parse(localStorage.getItem('vaneor_settings')) || defaultSettings;
+
+        document.addEventListener('DOMContentLoaded', () => {
             renderAdminTable();
             populateContentForm();
             populateSettingsForm();
@@ -253,28 +258,7 @@
             });
         });
 
-        async function loadAdminData() {
-            try {
-                const prodSnap = await getDocs(collection(db, "products"));
-                if (!prodSnap.empty) {
-                    products = prodSnap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
-                }
-
-                const settingsSnap = await getDocs(collection(db, "settings"));
-                if (!settingsSnap.empty) {
-                    siteSettings = settingsSnap.docs[0].data();
-                }
-
-                const contentSnap = await getDocs(collection(db, "content"));
-                if (!contentSnap.empty) {
-                    siteContent = contentSnap.docs[0].data();
-                }
-            } catch (err) {
-                console.error("Error loading cloud admin data:", err);
-            }
-        }
-
-        window.switchTab = function(tab) {
+        function switchTab(tab) {
             document.getElementById('tab-products').classList.add('hidden');
             document.getElementById('tab-settings').classList.add('hidden');
             document.getElementById('tab-content').classList.add('hidden');
@@ -300,18 +284,14 @@
             document.getElementById('s-whatsapp').value = siteSettings.whatsapp || "201037664877";
         }
 
-        document.getElementById('settings-form').addEventListener('submit', async (e) => {
+        document.getElementById('settings-form').addEventListener('submit', (e) => {
             e.preventDefault();
             siteSettings = {
                 email: document.getElementById('s-email').value.trim(),
                 whatsapp: document.getElementById('s-whatsapp').value.trim()
             };
-            try {
-                await setDoc(doc(db, "settings", "main"), siteSettings);
-                showToast('Dispatch channels updated on Cloud successfully.');
-            } catch (err) {
-                showToast('Error saving settings to cloud.');
-            }
+            localStorage.setItem('vaneor_settings', JSON.stringify(siteSettings));
+            showToast('Dispatch channels updated successfully.');
         });
 
         function renderAdminTable() {
@@ -381,9 +361,8 @@
                 if(index !== -1) {
                     const finalImages = imagesArray.length > 0 ? imagesArray : (products[index].images || [products[index].image]);
                     products[index] = { ...products[index], name, price: basePriceUsd, oldPrice: baseOldPriceUsd, category, color, description: desc, images: finalImages, image: finalImages[0] };
-                    await setDoc(doc(db, "products", String(id)), products[index]);
                 }
-                showToast('Product updated on Cloud successfully.');
+                showToast('Product updated successfully.');
             } else {
                 if(imagesArray.length === 0) {
                     showToast('Please provide at least one image URL or upload files.');
@@ -391,15 +370,15 @@
                 }
                 const newProd = { id: Date.now(), name, category, price: basePriceUsd, oldPrice: baseOldPriceUsd, color, description: desc, images: imagesArray, image: imagesArray[0], sizes: ["S", "M", "L", "XL"] };
                 products.push(newProd);
-                await setDoc(doc(db, "products", String(newProd.id)), newProd);
-                showToast('New product added to Cloud catalog.');
+                showToast('New product added to catalog.');
             }
 
+            localStorage.setItem('vaneor_products', JSON.stringify(products));
             renderAdminTable();
             resetForm();
         });
 
-        window.editProduct = function(id) {
+        function editProduct(id) {
             const p = products.find(prod => prod.id == id);
             if(!p) return;
             document.getElementById('product-id').value = p.id;
@@ -417,20 +396,16 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        window.deleteProduct = async function(id) {
+        function deleteProduct(id) {
             if(confirm("Are you sure you want to remove this piece from the catalog?")) {
-                try {
-                    await deleteDoc(doc(db, "products", String(id)));
-                    products = products.filter(p => p.id != id);
-                    renderAdminTable();
-                    showToast('Product removed from Cloud successfully.');
-                } catch (err) {
-                    showToast('Error deleting product from cloud.');
-                }
+                products = products.filter(p => p.id != id);
+                localStorage.setItem('vaneor_products', JSON.stringify(products));
+                renderAdminTable();
+                showToast('Product removed successfully.');
             }
         }
 
-        window.resetForm = function() {
+        function resetForm() {
             document.getElementById('product-form').reset();
             document.getElementById('product-id').value = '';
             document.getElementById('form-title').innerText = "Add New Winter Piece";
@@ -455,7 +430,7 @@
             document.getElementById('c-desc').value = siteContent.desc;
         }
 
-        document.getElementById('content-form').addEventListener('submit', async (e) => {
+        document.getElementById('content-form').addEventListener('submit', (e) => {
             e.preventDefault();
             siteContent = {
                 brand: document.getElementById('c-brand').value,
@@ -464,12 +439,8 @@
                 heroBg: document.getElementById('c-hero-bg').value,
                 desc: document.getElementById('c-desc').value
             };
-            try {
-                await setDoc(doc(db, "content", "main"), siteContent);
-                showToast('Storefront content updated on Cloud successfully.');
-            } catch (err) {
-                showToast('Error updating store content.');
-            }
+            localStorage.setItem('vaneor_content', JSON.stringify(siteContent));
+            showToast('Storefront content updated successfully.');
         });
 
         function showToast(message) {
