@@ -1,6 +1,21 @@
 /* ==========================================
-   VANEOR WEAR - High Converting Store Script
+   VANEOR WEAR - Dynamic Cloud Store Script
    ========================================== */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDbU4p7LYnhFE1Pdbgw1_2EjeDHHv4ca-8",
+    authDomain: "vaneor-wear-b37cb.firebaseapp.com",
+    projectId: "vaneor-wear-b37cb",
+    storageBucket: "vaneor-wear-b37cb.appspot.com",
+    messagingSenderId: "241436806989",
+    appId: "1:241436806989:web:88460822fd2882e1edf104"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const currencies = {
     USD: { symbol: '$', rate: 1, name: 'US Dollar' },
@@ -10,7 +25,7 @@ const currencies = {
     AED: { symbol: 'AED ', rate: 3.67, name: 'UAE Dirham' }
 };
 
-const flags = { en: 'fi-gb', ar: 'fi-eg', de: 'fi-de', fr: 'fi-fr', es: 'fi-es' };
+const flags = { en: 'fi-gb', ar: 'fi-eg' };
 
 const translations = {
     en: {
@@ -41,69 +56,9 @@ const translations = {
     }
 };
 
-const defaultProducts = [
-    {
-        id: 1,
-        name: "The Kensington Double-Breasted Wool Coat",
-        category: "Outerwear",
-        price: 27000 / 50,
-        oldPrice: 32000 / 50,
-        color: "Dark Navy",
-        images: [
-            "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800",
-            "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=800"
-        ],
-        description: "Crafted from heavy virgin wool blend with peak lapels.",
-        sizes: ["S", "M", "L", "XL", "XXL"]
-    },
-    {
-        id: 2,
-        name: "Milano Cashmere Turtleneck",
-        category: "Knitwear",
-        price: 8500 / 50,
-        oldPrice: 10500 / 50,
-        color: "Rich Camel",
-        images: [
-            "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&q=80&w=800",
-            "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&q=80&w=800"
-        ],
-        description: "Luxurious pure cashmere knit designed for uncompromising warmth and sleek silhouette.",
-        sizes: ["S", "M", "L", "XL"]
-    },
-    {
-        id: 3,
-        name: "Savile Row Tailored Wool Trousers",
-        category: "Trousers",
-        price: 9500 / 50,
-        oldPrice: 12000 / 50,
-        color: "Charcoal Gray",
-        images: [
-            "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=800",
-            "https://images.unsplash.com/photo-1533867617858-e7d97e0afd8b?auto=format&fit=crop&q=80&w=800"
-        ],
-        description: "Immaculate pleated wool trousers with classic high-waist old money drape.",
-        sizes: ["30", "32", "34", "36", "38"]
-    }
-];
-
-const defaultContent = {
-    brand: "VANEOR WEAR",
-    subtitle: "Autumn / Winter Legacy",
-    title: "Timeless Elegance. Winter Legacy.",
-    heroBg: "https://i.pinimg.com/736x/5d/62/13/5d62135a72920729abb6eb7f92fbeaf3.jpg",
-    desc: "Immaculate heavy wool coats, structured turtlenecks, and refined tailored trousers."
-};
-
-const defaultSettings = {
-    whatsapp: "201037664877",
-    email: "vaneor.wear@gmail.com"
-};
-
 let currentLang = localStorage.getItem('vaneor_lang') || 'en';
 let currentCurr = localStorage.getItem('vaneor_curr') || 'USD';
-let products = JSON.parse(localStorage.getItem('vaneor_products')) || defaultProducts;
-let siteContent = JSON.parse(localStorage.getItem('vaneor_content')) || defaultContent;
-let siteSettings = JSON.parse(localStorage.getItem('vaneor_settings')) || defaultSettings;
+let products = [];
 let cart = JSON.parse(localStorage.getItem('vaneor_cart')) || [];
 let selectedSizeState = null;
 let currentQuantityState = 1;
@@ -111,42 +66,31 @@ let pendingActionUrl = null;
 
 const kachingAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
 
-const productGrid = document.getElementById('product-grid');
-const filterContainer = document.getElementById('filter-container');
-const cartBtn = document.getElementById('cart-btn');
-const closeCart = document.getElementById('close-cart');
-const cartDrawer = document.getElementById('cart-drawer');
-const cartPanel = document.getElementById('cart-panel');
-const cartBackdrop = document.getElementById('cart-backdrop');
-const cartBadge = document.getElementById('cart-badge');
-const cartItemsContainer = document.getElementById('cart-items-container');
-const cartTotal = document.getElementById('cart-total');
-const checkoutBtn = document.getElementById('checkout-btn');
-
-const modal = document.getElementById('quick-view-modal');
-const modalBackdrop = document.getElementById('modal-backdrop');
-const closeModal = document.getElementById('close-modal');
-const modalBody = document.getElementById('modal-body');
-
-const checkoutModal = document.getElementById('checkout-modal');
-const checkoutBackdrop = document.getElementById('checkout-backdrop');
-const closeCheckout = document.getElementById('close-checkout');
-const orderForm = document.getElementById('order-form');
-const checkoutTotalPrice = document.getElementById('checkout-total-price');
-
-const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-const mobileMenu = document.getElementById('mobile-menu');
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initRadioStates();
     applyLanguage(currentLang);
     applyCurrency(currentCurr);
-    applySiteContent();
-    renderProducts('all');
-    updateCartUI();
     setupEventListeners();
     createCustomAlertModal();
+
+    // جلب المنتجات المحدثة من Firebase مباشرة لجميع الزوار
+    await fetchCloudProducts();
 });
+
+async function fetchCloudProducts() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "products"));
+        products = [];
+        querySnapshot.forEach((docSnap) => {
+            products.push(docSnap.data());
+        });
+        
+        renderProducts('all');
+        updateCartUI();
+    } catch (err) {
+        console.error("Error fetching cloud products:", err);
+    }
+}
 
 function initRadioStates() {
     const langRadio = document.querySelector(`input[name="lang-option"][value="${currentLang}"]`);
@@ -166,7 +110,7 @@ function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('vaneor_lang', lang);
     applyLanguage(lang);
-    renderProducts('all');
+    renderProducts(document.querySelector('.filter-btn.active')?.dataset.filter || 'all');
     updateCartUI();
 }
 
@@ -191,7 +135,7 @@ function setCurrency(currCode) {
     currentCurr = currCode;
     localStorage.setItem('vaneor_curr', currCode);
     applyCurrency(currCode);
-    renderProducts('all');
+    renderProducts(document.querySelector('.filter-btn.active')?.dataset.filter || 'all');
     updateCartUI();
 }
 
@@ -200,14 +144,8 @@ function applyCurrency(currCode) {
     document.getElementById('nav-curr-code').innerText = `${curr.symbol.trim()}${currCode}`;
 }
 
-function applySiteContent() {
-    document.getElementById('brand-logo-text').innerText = siteContent.brand;
-    document.getElementById('footer-brand').innerText = siteContent.brand;
-    document.getElementById('hero-bg-img').src = siteContent.heroBg;
-}
-
 function toggleMobileMenu() {
-    mobileMenu.classList.toggle('hidden');
+    document.getElementById('mobile-menu').classList.toggle('hidden');
 }
 
 function togglePaymentFields(method) {
@@ -229,11 +167,12 @@ function handleFileSelect(input) {
 }
 
 function renderProducts(filterCategory) {
+    const productGrid = document.getElementById('product-grid');
     productGrid.innerHTML = '';
     const filtered = filterCategory === 'all' ? products : products.filter(p => p.category === filterCategory);
 
     if (filtered.length === 0) {
-        productGrid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-12">No pieces found in this category.</p>`;
+        productGrid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-12">${currentLang === 'ar' ? 'جاري تحميل القطع...' : 'Loading collection...'}</p>`;
         return;
     }
 
@@ -305,7 +244,7 @@ function setupEventListeners() {
         }
     });
 
-    filterContainer.addEventListener('click', (e) => {
+    document.getElementById('filter-container').addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON') {
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.className = "filter-btn whitespace-nowrap px-5 py-2.5 text-xs uppercase tracking-widest font-medium transition duration-300 bg-vaneor-navy/80 text-gray-300 hover:bg-vaneor-camel hover:text-vaneor-dark border border-gray-800 rounded-sm";
@@ -315,16 +254,16 @@ function setupEventListeners() {
         }
     });
 
-    mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileMenu);
 
-    cartBtn.addEventListener('click', openCartDrawer);
-    closeCart.addEventListener('click', closeCartDrawer);
-    cartBackdrop.addEventListener('click', closeCartDrawer);
+    document.getElementById('cart-btn').addEventListener('click', openCartDrawer);
+    document.getElementById('close-cart').addEventListener('click', closeCartDrawer);
+    document.getElementById('cart-backdrop').addEventListener('click', closeCartDrawer);
 
-    closeModal.addEventListener('click', closeQuickViewModal);
-    modalBackdrop.addEventListener('click', closeQuickViewModal);
+    document.getElementById('close-modal').addEventListener('click', closeQuickViewModal);
+    document.getElementById('modal-backdrop').addEventListener('click', closeQuickViewModal);
 
-    checkoutBtn.addEventListener('click', () => {
+    document.getElementById('checkout-btn').addEventListener('click', () => {
         if(cart.length === 0) {
             showToast(currentLang === 'ar' ? 'السلة فارغة حالياً' : 'Your cart is currently empty.');
             return;
@@ -332,23 +271,23 @@ function setupEventListeners() {
         closeCartDrawer();
         openCheckoutModal();
     });
-    closeCheckout.addEventListener('click', closeCheckoutModal);
-    checkoutBackdrop.addEventListener('click', closeCheckoutModal);
+    document.getElementById('close-checkout').addEventListener('click', closeCheckoutModal);
+    document.getElementById('checkout-backdrop').addEventListener('click', closeCheckoutModal);
 }
 
 function openCartDrawer() {
-    cartDrawer.classList.remove('pointer-events-none');
-    cartBackdrop.classList.remove('opacity-0', 'pointer-events-none');
-    cartPanel.classList.remove('translate-x-full');
+    document.getElementById('cart-drawer').classList.remove('pointer-events-none');
+    document.getElementById('cart-backdrop').classList.remove('opacity-0', 'pointer-events-none');
+    document.getElementById('cart-panel').classList.remove('translate-x-full');
 }
 
 function closeCartDrawer() {
-    cartPanel.classList.add('translate-x-full');
-    cartBackdrop.classList.add('opacity-0', 'pointer-events-none');
-    setTimeout(() => cartDrawer.classList.add('pointer-events-none'), 300);
+    document.getElementById('cart-panel').classList.add('translate-x-full');
+    document.getElementById('cart-backdrop').classList.add('opacity-0', 'pointer-events-none');
+    setTimeout(() => document.getElementById('cart-drawer').classList.add('pointer-events-none'), 300);
 }
 
-function openQuickView(productId) {
+window.openQuickView = function(productId) {
     const p = products.find(prod => prod.id == productId);
     if(!p) return;
     const t = translations[currentLang] || translations.en;
@@ -368,7 +307,7 @@ function openQuickView(productId) {
         `;
     }
 
-    modalBody.innerHTML = `
+    document.getElementById('modal-body').innerHTML = `
         <div class="space-y-4">
             <div class="aspect-[4/5] overflow-hidden rounded-sm bg-vaneor-dark border border-gray-800">
                 <img id="modal-main-img" src="${images[0]}" alt="${p.name}" class="w-full h-full object-cover transition duration-300" onerror="this.src='https://placehold.co/800x1000/111827/F4F1EA?text=VANEOR'">
@@ -414,17 +353,18 @@ function openQuickView(productId) {
         </div>
     `;
 
+    const modal = document.getElementById('quick-view-modal');
     modal.classList.remove('opacity-0', 'pointer-events-none');
     modal.querySelector('#modal-content-box').classList.remove('scale-95');
 }
 
-function changeQuantity(amount) {
+window.changeQuantity = function(amount) {
     currentQuantityState += amount;
     if (currentQuantityState < 1) currentQuantityState = 1;
     document.getElementById('modal-quantity-display').innerText = currentQuantityState;
 }
 
-function changeModalImage(imgSrc, btnElement) {
+window.changeModalImage = function(imgSrc, btnElement) {
     document.getElementById('modal-main-img').src = imgSrc;
     const parentContainer = btnElement.parentElement;
     parentContainer.querySelectorAll('button').forEach(btn => {
@@ -433,7 +373,7 @@ function changeModalImage(imgSrc, btnElement) {
     btnElement.className = "w-14 h-18 rounded-sm overflow-hidden border-2 border-vaneor-camel transition flex-shrink-0";
 }
 
-function selectSize(size, btnElement) {
+window.selectSize = function(size, btnElement) {
     selectedSizeState = size;
     document.querySelectorAll('.size-btn').forEach(btn => {
         btn.className = "size-btn px-4 py-2 border border-gray-700 text-vaneor-cream hover:border-vaneor-camel text-xs uppercase tracking-wider transition";
@@ -441,7 +381,7 @@ function selectSize(size, btnElement) {
     btnElement.className = "size-btn px-4 py-2 border border-vaneor-camel bg-vaneor-camel text-vaneor-dark font-bold text-xs uppercase tracking-wider transition";
 }
 
-function addToCartWithSize(productId) {
+window.addToCartWithSize = function(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
 
@@ -474,7 +414,7 @@ function addToCartWithSize(productId) {
     openCartDrawer();
 }
 
-function updateCartItemQuantity(cartKey, amount) {
+window.updateCartItemQuantity = function(cartKey, amount) {
     const item = cart.find(i => i.cartKey === cartKey);
     if (item) {
         item.quantity += amount;
@@ -486,22 +426,24 @@ function updateCartItemQuantity(cartKey, amount) {
     }
 }
 
-function removeFromCart(cartKey) {
+window.removeFromCart = function(cartKey) {
     cart = cart.filter(item => item.cartKey !== cartKey);
     saveCart();
     updateCartUI();
 }
 
 function updateCartUI() {
+    const cartItemsContainer = document.getElementById('cart-items-container');
     cartItemsContainer.innerHTML = '';
     let total = 0;
     let totalCount = 0;
 
     if (cart.length === 0) {
         cartItemsContainer.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">${currentLang === 'ar' ? 'الحقيبة فارغة حالياً' : 'Your selection is currently empty.'}</p>`;
-        cartTotal.innerText = formatPrice(0);
-        cartBadge.classList.add('scale-0');
-        cartBadge.innerText = '0';
+        document.getElementById('cart-total').innerText = formatPrice(0);
+        const badge = document.getElementById('cart-badge');
+        badge.classList.add('scale-0');
+        badge.innerText = '0';
         return;
     }
 
@@ -530,9 +472,10 @@ function updateCartUI() {
         cartItemsContainer.appendChild(div);
     });
 
-    cartTotal.innerText = formatPrice(total);
-    cartBadge.innerText = totalCount;
-    cartBadge.classList.remove('scale-0');
+    document.getElementById('cart-total').innerText = formatPrice(total);
+    const badge = document.getElementById('cart-badge');
+    badge.innerText = totalCount;
+    badge.classList.remove('scale-0');
 }
 
 function saveCart() {
@@ -540,23 +483,27 @@ function saveCart() {
 }
 
 function closeQuickViewModal() {
+    const modal = document.getElementById('quick-view-modal');
     modal.classList.add('opacity-0', 'pointer-events-none');
     modal.querySelector('#modal-content-box').classList.add('scale-95');
 }
 
 function openCheckoutModal() {
     let total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-    checkoutTotalPrice.innerText = formatPrice(total);
+    document.getElementById('checkout-total-price').innerText = formatPrice(total);
+    const checkoutModal = document.getElementById('checkout-modal');
     checkoutModal.classList.remove('opacity-0', 'pointer-events-none');
     checkoutModal.querySelector('.relative').classList.remove('scale-95');
 }
 
 function closeCheckoutModal() {
+    const checkoutModal = document.getElementById('checkout-modal');
     checkoutModal.classList.add('opacity-0', 'pointer-events-none');
     checkoutModal.querySelector('.relative').classList.add('scale-95');
 }
 
-async function dispatchOrder(channel = 'gmail') {
+window.dispatchOrder = async function(channel = 'gmail') {
+    const orderForm = document.getElementById('order-form');
     if (!orderForm.checkValidity()) {
         orderForm.reportValidity();
         return;
@@ -617,9 +564,8 @@ async function dispatchOrder(channel = 'gmail') {
 
     text += `\n💰 *المجموع الكلي:* ${formatPrice(total)}`;
 
-    const activeSettings = JSON.parse(localStorage.getItem('vaneor_settings')) || defaultSettings;
-    const targetEmail = activeSettings.email || "vaneor.wear@gmail.com";
-    const targetWhatsapp = activeSettings.whatsapp || "201037664877";
+    const targetEmail = "vaneor.wear@gmail.com";
+    const targetWhatsapp = "201037664877";
 
     if (channel === 'whatsapp') {
         const waText = encodeURIComponent(text);
@@ -667,7 +613,7 @@ function showCustomAlertModal(channel, hasVodafone) {
     alertModal.classList.remove('opacity-0', 'pointer-events-none');
 }
 
-function confirmCustomAlert() {
+window.confirmCustomAlert = function() {
     const alertModal = document.getElementById('custom-alert-modal');
     alertModal.classList.add('opacity-0', 'pointer-events-none');
 
@@ -676,7 +622,7 @@ function confirmCustomAlert() {
         pendingActionUrl = null;
     }
 
-    orderForm.reset();
+    document.getElementById('order-form').reset();
     document.getElementById('file-chosen-name').innerText = '';
     cart = [];
     saveCart();
