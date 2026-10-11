@@ -415,12 +415,12 @@
         const db = getFirestore(app);
 
         // Currencies with live exchange rates fallback
-       const currencies = {
+      const currencies = {
             EGP: { symbol: 'EGP ', rate: 1, name: 'Egyptian Pound' },
-            USD: { symbol: '$', rate: 1 / 50.5, name: 'US Dollar' }, // أو معدل الصرف الحقيقي الحالي
-            EUR: { symbol: '€', rate: 1 / 55, name: 'Euro' },
-            SAR: { symbol: 'SAR ', rate: 1 / 13.5, name: 'Saudi Riyal' },
-            AED: { symbol: 'AED ', rate: 1 / 13.7, name: 'UAE Dirham' }
+            USD: { symbol: '$', rate: 0.02, name: 'US Dollar' }, // 1 على 50 تقريباً أو حسب رغبتك
+            EUR: { symbol: '€', rate: 0.018, name: 'Euro' },
+            SAR: { symbol: 'SAR ', rate: 0.075, name: 'Saudi Riyal' },
+            AED: { symbol: 'AED ', rate: 0.073, name: 'UAE Dirham' }
         };
 
         const flags = { en: 'fi-gb', ar: 'fi-eg' };
@@ -550,9 +550,10 @@
             if(currRadio) currRadio.checked = true;
         }
 
-      window.formatPrice = function(baseAmount) {
+    window.formatPrice = function(baseAmount) {
             const curr = currencies[currentCurr] || currencies.EGP;
-            const converted = baseAmount * curr.rate;
+            // لو العملة الحالية EGP، اعرض الرقم الأساسي كما هو تماماً بدون أي ضرب أو قسمة
+            const converted = currentCurr === 'EGP' ? baseAmount : (baseAmount * curr.rate);
             return `${curr.symbol}${converted.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
         }
 
