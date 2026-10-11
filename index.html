@@ -446,8 +446,6 @@
 
         let currentLang = localStorage.getItem('vaneor_lang') || 'en';
         let currentCurr = localStorage.getItem('vaneor_curr') || 'USD';
-        
-        // Load cached products instantly so the grid is never empty on load
         let products = JSON.parse(localStorage.getItem('vaneor_cached_products')) || [];
         let siteContent = {};
         let siteSettings = {};
@@ -458,20 +456,27 @@
 
         const kachingAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
 
-        // Initial render immediately using cache if available
+        // Initial UI Setup
         applyLanguage(currentLang);
         applyCurrency(currentCurr);
         initRadioStates();
         setupEventListeners();
         createCustomAlertModal();
-        if(products.length > 0) {
+
+        // If we have cached products, render immediately
+        if (products.length > 0) {
             renderProducts('all');
+        } else {
+            // Fallback skeleton or instant fetch if cache is empty
+            fetchProductsFromCloud(true);
         }
 
-        // Fetch live exchange rates and fresh Firestore data asynchronously in background
-        async function backgroundSync() {
+        // Background sync to always get latest data
+        fetchProductsFromCloud(false);
+
+        async function fetchProductsFromCloud(forceRender = false) {
             try {
-                // Fetch live exchange rates silently
+                // Fetch live exchange rates
                 fetch('https://open.er-api.com/v6/latest/USD')
                     .then(res => res.json())
                     .then(data => {
@@ -484,20 +489,20 @@
                         }
                     }).catch(() => {});
 
-                // Fetch Products from Cloud Firestore
                 const querySnapshot = await getDocs(collection(db, "products"));
-                const freshProducts = [];
+                const fetched = [];
                 querySnapshot.forEach((docSnap) => {
-                    freshProducts.push(docSnap.data());
+                    fetched.push(docSnap.data());
                 });
 
-                if (freshProducts.length > 0) {
-                    products = freshProducts;
+                if (fetched.length > 0) {
+                    products = fetched;
                     localStorage.setItem('vaneor_cached_products', JSON.stringify(products));
-                    renderProducts(document.querySelector('.filter-btn.active')?.dataset.filter || 'all');
+                    if (forceRender || document.getElementById('product-grid').children.length === 0) {
+                        renderProducts(document.querySelector('.filter-btn.active')?.dataset.filter || 'all');
+                    }
                 }
 
-                // Fetch Settings & Content
                 const settingsDoc = await getDoc(doc(db, "settings", "store_settings"));
                 if(settingsDoc.exists()) siteSettings = settingsDoc.data();
 
@@ -507,11 +512,9 @@
                     applySiteContent();
                 }
             } catch (err) {
-                console.warn("Background sync note:", err);
+                console.warn("Cloud sync warning:", err);
             }
         }
-
-        backgroundSync();
 
         function initRadioStates() {
             const langRadio = document.querySelector(`input[name="lang-option"][value="${currentLang}"]`);
@@ -604,7 +607,7 @@
             const filtered = filterCategory === 'all' ? products : products.filter(p => p.category === filterCategory);
 
             if (filtered.length === 0) {
-                productGrid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-12">${currentLang === 'ar' ? 'جاري تحميل القطع...' : 'Loading collection...'}</p>`;
+                productGrid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-12">${currentLang === 'ar' ? 'جاري عرض القطع...' : 'Loading collection...'}</p>`;
                 return;
             }
 
