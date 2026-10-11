@@ -415,12 +415,12 @@
         const db = getFirestore(app);
 
         // Currencies with live exchange rates fallback
-        const currencies = {
-            USD: { symbol: '$', rate: 1, name: 'US Dollar' },
-            EGP: { symbol: 'EGP ', rate: 50, name: 'Egyptian Pound' },
-            EUR: { symbol: '€', rate: 0.92, name: 'Euro' },
-            SAR: { symbol: 'SAR ', rate: 3.75, name: 'Saudi Riyal' },
-            AED: { symbol: 'AED ', rate: 3.67, name: 'UAE Dirham' }
+       const currencies = {
+            EGP: { symbol: 'EGP ', rate: 1, name: 'Egyptian Pound' },
+            USD: { symbol: '$', rate: 1 / 50, name: 'US Dollar' },
+            EUR: { symbol: '€', rate: 0.92 / 50, name: 'Euro' },
+            SAR: { symbol: 'SAR ', rate: 3.75 / 50, name: 'Saudi Riyal' },
+            AED: { symbol: 'AED ', rate: 3.67 / 50, name: 'UAE Dirham' }
         };
 
         const flags = { en: 'fi-gb', ar: 'fi-eg' };
@@ -550,9 +550,9 @@
             if(currRadio) currRadio.checked = true;
         }
 
-        window.formatPrice = function(usdAmount) {
-            const curr = currencies[currentCurr] || currencies.USD;
-            const converted = usdAmount * curr.rate;
+       window.formatPrice = function(baseAmount) {
+            const curr = currencies[currentCurr] || currencies.EGP;
+            const converted = baseAmount * curr.rate;
             return `${curr.symbol}${converted.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
         }
 
